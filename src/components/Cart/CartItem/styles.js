@@ -7,9 +7,10 @@ export default makeStyles(() => ({
   },
   cardContent: {
     display: 'flex',
+    flexDirection: 'column',
     justifyContent: 'space-between',
   },
-  cartActions: {
+  cardActions: {
     justifyContent: 'space-between',
   },
   buttons: {
@@ -20,6 +21,28 @@ export default makeStyles(() => ({
     color: 'white',
     width: '100%',
     height: '40px',
-
-},
+  },
+  titleSection: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '10px',
+  },
+  transactionChip: {
+    height: '20px',
+    fontSize: '0.7rem',
+  },
+  rentalDetails: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: '10px',
+  },
+  daysInput: {
+    width: '80px',
+    marginRight: '10px',
+  },
+  rateInfo: {
+    color: '#666',
+    fontStyle: 'italic',
+  }
 }));

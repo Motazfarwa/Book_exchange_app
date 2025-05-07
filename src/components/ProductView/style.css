@@ -3,6 +3,8 @@
   border-radius: 8px;
   box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px,
     rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+  margin-top: 100px;
+  margin-bottom: 50px;
 }
 
 .MuiContainer-root.product-view {
@@ -12,12 +14,52 @@
   align-items: center;
 }
 
-.product-view .image-wrapper img {
+.product-details-container {
+  border-radius: 12px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 30px;
+  overflow: hidden;
+  padding: 30px;
+}
+
+.back-button {
+  margin-bottom: 20px;
+  color: #001524;
+  font-weight: 500;
+}
+
+.product-view .image-wrapper {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  padding-top: 50px;
-  width: 80%;
+  position: relative;
+}
+
+.product-view .image-wrapper img {
+  max-width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.book-badges {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.book-badge {
+  font-size: 12px;
+}
+
+.book-badge.rental {
+  background-color: #e6f7ff;
+  color: #0072b3;
+}
+
+.book-badge.condition {
+  background-color: #f0f0f0;
+  color: #333;
 }
 
 .product-view .text {
@@ -25,7 +67,7 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  color: #000;
+  color: #333;
 }
 
 .product-view .text h2 {
@@ -39,6 +81,116 @@
   font-size: 18px;
   font-weight: 300;
   margin-bottom: 20px;
+}
+
+.title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.book-title {
+  color: #001524;
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.2;
+  margin-right: 10px;
+}
+
+.favorite-button {
+  margin-top: 5px;
+}
+
+.favorite-icon {
+  font-size: 1.8rem;
+  color: #999;
+}
+
+.favorite-icon.active {
+  color: #f1361d;
+}
+
+.book-author {
+  color: #555;
+  font-size: 1.2rem;
+  font-weight: 400;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
+.book-description {
+  margin-bottom: 30px;
+  line-height: 1.6;
+  color: #555;
+}
+
+.book-price {
+  color: #333;
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.book-price strong {
+  color: #f1361d;
+}
+
+.book-rent-price {
+  color: #555;
+  margin-bottom: 24px;
+}
+
+.book-isbn {
+  margin-top: 24px;
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.custom-button {
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-transform: none;
+  font-size: 1rem;
+}
+
+.cart-button {
+  background-color: #001524;
+  color: white;
+  flex: 1;
+}
+
+.cart-button:hover {
+  background-color: #2a344a;
+}
+
+.continue-button {
+  background-color: transparent;
+  color: #001524;
+  border: 2px solid #001524;
+  flex: 1;
+}
+
+.continue-button:hover {
+  background-color: rgba(0, 21, 36, 0.05);
+}
+
+.product-view-loading,
+.product-view-error {
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 .MuiContainer-root.product-view .custom-button {
@@ -82,5 +234,37 @@
 @media (min-width: 960px) {
   .product-view {
     height: 100vh;
+  }
+}
+
+@media (max-width: 960px) {
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .product-view .image-wrapper {
+    margin-bottom: 20px;
+  }
+  
+  .book-title {
+    font-size: 1.5rem;
+  }
+  
+  .book-author {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .product-details-container {
+    padding: 15px;
+  }
+  
+  .book-title {
+    font-size: 1.3rem;
+  }
+  
+  .action-buttons {
+    margin-top: 15px;
   }
 }

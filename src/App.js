@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { CssBaseline } from "@material-ui/core";
-import { commerce } from "./lib/commerce";
 import Products from "./components/Products/Products";
 import Navbar from "./components/Navbar/Navbar";
 import Cart from "./components/Cart/Cart";
@@ -8,195 +7,274 @@ import Checkout from "./components/CheckoutForm/Checkout/Checkout";
 import ProductView from "./components/ProductView/ProductView";
 import Manga from "./components/Manga/Manga";
 import Footer from "./components/Footer/Footer";
+import Fiction from "./components/Fiction/Fiction";
+import Biography from "./components/Bio/Biography";
+import Login from "./components/Auth/Login";
+import Register from "./components/Auth/Register";
+import AddBook from "./components/Books/AddBook";
+import MyBooks from "./components/Books/MyBooks";
+import Favorites from "./components/Books/Favorites";
+import Profile from "./components/Auth/Profile";
+import Exchange from "./components/Books/Exchange";
+import MyExchanges from "./components/Books/MyExchanges";
+import NotificationBell from "./components/Notifications/NotificationBell";
+import MessageNotificationBell from "./components/Notifications/MessageNotificationBell";
+import ChatList from "./components/Chat/ChatList";
+import ChatRoom from "./components/Chat/ChatRoom";
+import { initializeSocket, closeSocket } from "./services/socket";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { PrivateRoute, PublicRoute } from "./middleware/auth";
+import { authService, bookService, cartService } from "./services/api";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "mdbreact/dist/css/mdb.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import loadingImg from "./assets/loader.gif";
 import "./style.css";
-import Fiction from "./components/Fiction/Fiction";
-import Biography from "./components/Bio/Biography";
+import ExchangeHistory from "./components/Books/ExchangeHistory";
 
 const App = () => {
-  const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [products, setProducts] = useState([]);
-  const [mangaProducts, setMangaProducts] = useState([]);
-  const [fictionProducts, setFictionProducts] = useState([]);
-  const [bioProducts, setBioProducts] = useState([]);
-  const [featureProducts, setFeatureProducts] = useState([]);
-  const [cart, setCart] = useState({});
+  const [books, setBooks] = useState([]);
+  const [mangaBooks, setMangaBooks] = useState([]);
+  const [fictionBooks, setFictionBooks] = useState([]);
+  const [bioBooks, setBioBooks] = useState([]);
+  const [featuredBooks, setFeaturedBooks] = useState([]);
+  const [cart, setCart] = useState(() => cartService.getCart());
   const [order, setOrder] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());
 
-  const fetchProducts = async () => {
-    const { data } = await commerce.products.list();
+  // Initialize cart from localStorage and user from token
+  useEffect(() => {
+    setCart(cartService.getCart());
+    setCurrentUser(authService.getCurrentUser());
+  }, []);
 
-    setProducts(data);
-  };
+  // Fetch books on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch all books
+        const booksData = await bookService.getAllBooks();
+        setBooks(booksData);
+        
+        // Fetch books by category
+        try {
+          const mangaData = await bookService.getBooksByCategory('manga');
+          setMangaBooks(mangaData);
+        } catch (error) {
+          console.error("Error fetching manga books:", error);
+          // Fallback to client-side filtering if API endpoint doesn't exist
+          setMangaBooks(booksData.filter(book => book.category === 'manga'));
+        }
+        
+        try {
+          const fictionData = await bookService.getBooksByCategory('fiction');
+          setFictionBooks(fictionData);
+        } catch (error) {
+          console.error("Error fetching fiction books:", error);
+          setFictionBooks(booksData.filter(book => book.category === 'fiction'));
+        }
+        
+        try {
+          const bioData = await bookService.getBooksByCategory('biography');
+          setBioBooks(bioData);
+        } catch (error) {
+          console.error("Error fetching biography books:", error);
+          setBioBooks(booksData.filter(book => book.category === 'biography'));
+        }
+        
+        // Set featured books (top 6 books)
+        setFeaturedBooks(booksData.slice(0, 6));
+        
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching books:", error);
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
 
-  const fetchMangaProducts = async () => {
-    const { data } = await commerce.products.list({
-      category_slug: ["manga"],
-    });
+  // Initialize socket connection when user logs in
+  useEffect(() => {
+    if (currentUser) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const socket = initializeSocket(token);
+        // Log socket connection
+        if (socket) {
+          console.log('Socket initialized in App component');
+        }
+      }
+    } else {
+      closeSocket();
+    }
+    
+    return () => {
+      closeSocket();
+    };
+  }, [currentUser]);
 
-    setMangaProducts(data);
-  };
-
-  const fetchFeatureProducts = async () => {
-    const { data } = await commerce.products.list({
-      category_slug: ["featured"],
-    });
-
-    setFeatureProducts(data);
-  };
-
-  const fetchFictionProducts = async () => {
-    const { data } = await commerce.products.list({
-      category_slug: ["fiction"],
-    });
-
-    setFictionProducts(data);
-  };
-
-  const fetchBioProducts = async () => {
-    const { data } = await commerce.products.list({
-      category_slug: ["biography"],
-    });
-
-    setBioProducts(data);
-  };
-
-  const fetchCart = async () => {
-    setCart(await commerce.cart.retrieve());
-  };
-
-  const handleAddToCart = async (productId, quantity) => {
-    const item = await commerce.cart.add(productId, quantity);
-
-    setCart(item.cart);
-  };
-
-  const handleUpdateCartQty = async (lineItemId, quantity) => {
-    const response = await commerce.cart.update(lineItemId, { quantity });
-
-    setCart(response.cart);
-  };
-
-  const handleRemoveFromCart = async (lineItemId) => {
-    const response = await commerce.cart.remove(lineItemId);
-
-    setCart(response.cart);
-  };
-
-  const handleEmptyCart = async () => {
-    const response = await commerce.cart.empty();
-
-    setCart(response.cart);
-  };
-
-  const refreshCart = async () => {
-    const newCart = await commerce.cart.refresh();
-
-    setCart(newCart);
-  };
-
-  const handleCaptureCheckout = async (checkoutTokenId, newOrder) => {
+  // Cart handling functions
+  const handleAddToCart = async (productId, quantity, price, transactionType = 'buy') => {
     try {
-      const incomingOrder = await commerce.checkout.capture(
-        checkoutTokenId,
-        newOrder
-      );
-
-      setOrder(incomingOrder);
-
-      refreshCart();
+      // Get product details first to include price information if not provided
+      if (!price) {
+        const product = await bookService.getBookById(productId);
+        price = transactionType === 'buy' ? product.price : product.rent_price;
+      }
+      
+      // Add to cart with product details and transaction type
+      const updatedCart = cartService.addToCart(productId, quantity, price, transactionType);
+      setCart(updatedCart);
     } catch (error) {
-      setErrorMessage(error.data.error.message);
+      console.error('Error adding to cart:', error);
     }
   };
 
-  useEffect(() => {
-    fetchProducts();
-    fetchFeatureProducts();
-    fetchCart();
-    fetchMangaProducts();
-    fetchFictionProducts();
-    fetchBioProducts();
-  }, []);
+  const handleUpdateCartQty = (productId, quantity, transactionType = 'buy') => {
+    const updatedCart = cartService.updateItemQuantity(productId, quantity, transactionType);
+    setCart(updatedCart);
+  };
 
-  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
+  const handleRemoveFromCart = (productId, transactionType = null) => {
+    const updatedCart = cartService.removeFromCart(productId, transactionType);
+    setCart(updatedCart);
+  };
+
+  const handleEmptyCart = () => {
+    const emptyCart = cartService.clearCart();
+    setCart(emptyCart);
+  };
+
+  const handleCaptureCheckout = (checkoutTokenId, newOrder) => {
+    try {
+      // In a real implementation, this would talk to the backend
+      setOrder(newOrder);
+      handleEmptyCart();
+    } catch (error) {
+      setErrorMessage(error.message);
+    }
+  };
+
+  // Auth related handlers
+  const handleLogin = (userData) => {
+    // Make sure we're setting the user correctly
+    const user = userData.user || userData;
+    setCurrentUser(user);
+    console.log('User logged in:', user);
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    setCurrentUser(null);
+    console.log('User logged out');
+  };
+
+  const handleProfileUpdate = (updatedUser) => {
+    setCurrentUser(updatedUser);
+  };
+
+  if (loading) {
+    return (
+      <div className="loader">
+        <img src={loadingImg} alt="Loading" />
+      </div>
+    );
+  }
 
   return (
-    <div>
-      {products.length > 0 ? (
-        <>
-          <Router>
-            <div style={{ display: "flex" }}>
-              <CssBaseline />
-              <Navbar
-                totalItems={cart.total_items}
-                handleDrawerToggle={handleDrawerToggle}
-              />
-              <Switch>
-                <Route exact path="/">
-                  <Products
-                    products={products}
-                    featureProducts={featureProducts}
-                    onAddToCart={handleAddToCart}
-                    handleUpdateCartQty
-                  />
-                </Route>
-                <Route exact path="/cart">
-                  <Cart
-                    cart={cart}
-                    onUpdateCartQty={handleUpdateCartQty}
-                    onRemoveFromCart={handleRemoveFromCart}
-                    onEmptyCart={handleEmptyCart}
-                  />
-                </Route>
-                <Route path="/checkout" exact>
-                  <Checkout
-                    cart={cart}
-                    order={order}
-                    onCaptureCheckout={handleCaptureCheckout}
-                    error={errorMessage}
-                  />
-                </Route>
-                <Route path="/product-view/:id" exact>
-                  <ProductView />
-                </Route>
-                <Route path="/manga" exact>
-                  <Manga
-                    mangaProducts={mangaProducts}
-                    onAddToCart={handleAddToCart}
-                    handleUpdateCartQty
-                  />
-                </Route>
-                <Route path="/fiction" exact>
-                  <Fiction
-                    fictionProducts={fictionProducts}
-                    onAddToCart={handleAddToCart}
-                    handleUpdateCartQty
-                  />
-                </Route>
-                <Route path="/biography" exact>
-                  <Biography
-                    bioProducts={bioProducts}
-                    onAddToCart={handleAddToCart}
-                    handleUpdateCartQty
-                  />
-                </Route>
-              </Switch>
-            </div>
-          </Router>
-          <Footer />
-        </>
-      ) : (
-        <div className="loader">
-          <img src={loadingImg} alt="Loading" />
-        </div>
-      )}
-    </div>
+    <Router>
+      <div>
+        <CssBaseline />
+        <Navbar 
+          totalItems={cart.total_items} 
+          currentUser={currentUser}
+          onLogout={handleLogout}
+        />
+        <Switch>
+          <Route exact path="/">
+            <Products
+              products={books}
+              featureProducts={featuredBooks}
+              onAddToCart={handleAddToCart}
+            />
+          </Route>
+          
+          <Route exact path="/cart">
+            <Cart
+              cart={cart}
+              onUpdateCartQty={handleUpdateCartQty}
+              onRemoveFromCart={handleRemoveFromCart}
+              onEmptyCart={handleEmptyCart}
+            />
+          </Route>
+          
+          <Route path="/checkout" exact>
+            <Checkout
+              cart={cart}
+              order={order}
+              onCaptureCheckout={handleCaptureCheckout}
+              error={errorMessage}
+            />
+          </Route>
+          
+          <Route path="/books/:id" exact>
+            <ProductView onAddToCart={handleAddToCart} />
+          </Route>
+          
+          <Route path="/manga" exact>
+            <Manga
+              mangaProducts={mangaBooks}
+              onAddToCart={handleAddToCart}
+            />
+          </Route>
+          
+          <Route path="/fiction" exact>
+            <Fiction
+              fictionProducts={fictionBooks}
+              onAddToCart={handleAddToCart}
+            />
+          </Route>
+          
+          <Route path="/biography" exact>
+            <Biography
+              bioProducts={bioBooks}
+              onAddToCart={handleAddToCart}
+            />
+          </Route>
+          
+          <PublicRoute path="/login" restricted={true} component={(props) => 
+            <Login {...props} onLogin={handleLogin} />
+          } />
+          
+          <PublicRoute path="/register" restricted={true} component={Register} />
+          
+          <PrivateRoute path="/add-book" component={AddBook} />
+          <PrivateRoute path="/my-books" component={MyBooks} />
+          <PrivateRoute path="/favorites" component={Favorites} />
+          <PrivateRoute 
+            path="/profile" 
+            component={(props) => <Profile {...props} onProfileUpdate={handleProfileUpdate} />} 
+          />
+          <PrivateRoute path="/exchange/:id" component={Exchange} />
+          <PrivateRoute path="/my-exchanges" component={MyExchanges} />
+          <PrivateRoute path="/exchange-history" component={ExchangeHistory} />
+          <PrivateRoute 
+            path="/chat/:exchangeId" 
+            component={(props) => (
+              <ChatRoom {...props} key={props.match.params.exchangeId} />
+            )}
+          />
+          <PrivateRoute path="/my-chats" component={ChatList} />
+        </Switch>
+        <Footer />
+      </div>
+    </Router>
   );
 };
 
