@@ -17,8 +17,6 @@ import Favorites from "./components/Books/Favorites";
 import Profile from "./components/Auth/Profile";
 import Exchange from "./components/Books/Exchange";
 import MyExchanges from "./components/Books/MyExchanges";
-import NotificationBell from "./components/Notifications/NotificationBell";
-import MessageNotificationBell from "./components/Notifications/MessageNotificationBell";
 import ChatList from "./components/Chat/ChatList";
 import ChatRoom from "./components/Chat/ChatRoom";
 import { initializeSocket, closeSocket } from "./services/socket";
@@ -31,6 +29,10 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import loadingImg from "./assets/loader.gif";
 import "./style.css";
 import ExchangeHistory from "./components/Books/ExchangeHistory";
+import  Dashboard  from "./components/admindashboard/Dashboard";
+import Payment from "./components/Payment/Payment";
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 
 const App = () => {
   const [books, setBooks] = useState([]);
@@ -43,7 +45,8 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(authService.getCurrentUser());
-
+// Your Stripe publishable key (replace with your own key)
+const stripePromise = loadStripe('pk_test_51RKKT3005XouV5R4gVNvo42RgDb10F23Ijk1F3HIbm9HZaL60ynCY6RIuW0mFXvfGHw9oXGolo9ScNef7z8TxJu600nHv4OXAo');
   // Initialize cart from localStorage and user from token
   useEffect(() => {
     setCart(cartService.getCart());
@@ -271,11 +274,18 @@ const App = () => {
             )}
           />
           <PrivateRoute path="/my-chats" component={ChatList} />
-        </Switch>
-        <Footer />
-      </div>
-    </Router>
-  );
-};
+           <PrivateRoute path="/dashboard" component={Dashboard} />
+           <PrivateRoute path="/payment" component={() => (
+            <Elements stripe={stripePromise}>
+                       <Payment />
+         </Elements>
+         )} />
+
+          </Switch>
+          <Footer/>
+        </div>
+       </Router>
+      );
+    };
 
 export default App;
