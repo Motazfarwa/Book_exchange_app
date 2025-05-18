@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_CREDENTIALS = 'dockerhub mootezfarwa'  // Jenkins credential ID for Docker Hub login
+        DOCKER_HUB_CREDENTIALS = 'dockerhub-mootezfarwa'  // Jenkins credential ID for Docker Hub login
         DOCKER_IMAGE_NAME = 'mootezfarwa/book_exchange_app'
         DOCKER_IMAGE_TAG = 'latest'
     }
