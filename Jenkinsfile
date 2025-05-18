@@ -8,11 +8,12 @@ pipeline {
     }
 
     stages {
-        stage('Clone Code') {
-            steps {
-                git 'https://github.com/Motazfarwa/Book_exchange_app.git'
-            }
+       stage('Clone Code') {
+           steps {
+        git branch: 'ahmed', url: 'https://github.com/Motazfarwa/Book_exchange_app.git'
+          }
         }
+
 
         stage('Docker Login') {
             steps {
